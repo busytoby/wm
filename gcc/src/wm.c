@@ -15,16 +15,19 @@ struct EntrancyHandle* Tail = NULL;
 struct Library* (*library_entrancy_function)();
 typedef struct Library* (*write_callback)(struct Book*);
 typedef struct Book* (*read_callback)(struct Book*);
+typedef int* (*register_WMReader_function)(struct Book* (*read_callback)(struct Book*));
+typedef int* (*register_WMWriter_function)(struct Library* (*write_callback)(struct Book*));
+typedef int (*signal_fptr)(int);
 
 struct Library* Write(struct Book* B) {
     printf("Write WM Test\n");
-    printf("%s", (char*)B->h->i);
+    printf("%s\n", (char*)B->h->i);
     return NULL;
 }
 
 struct Book* Read(struct Book* B) {
     printf("Read WM Test\n");
-    printf("%s", (char*)B->h->i);
+    printf("%s\n", (char*)B->h->i);
     return NULL;
 }
 
@@ -43,8 +46,29 @@ struct EntrancyHandle* Enter(struct EntrancyHandle* E, char *f) {
   return Enter(E->n, f);
 }
 
+int CallWrite(char* Key, struct Book* B) {
+    struct EntrancyHandle* E = Enter(Head, Key);
+    if(E == NULL) {
+      fprintf(stderr, "No [%s] Plugin Found\n", Key);
+      return EXIT_FAILURE;
+    }
+    write_callback writer = (write_callback)(E->L->h->n->h->i);
+    writer(B);
+    return 0;
+}
+
+int CallRead(char* Key, struct Book* B) {
+    struct EntrancyHandle* E = Enter(Head, Key);
+    if(E == NULL) {
+      fprintf(stderr, "No [%s] Plugin Found\n", Key);
+      return EXIT_FAILURE;
+    }
+    read_callback reader = (read_callback)(E->L->h->n->n->h->i);
+    reader(B);
+    return 0;
+}
+
 int CallSignal(char *Key, int Signal) {
-    typedef int (*signal_fptr)(int);
     struct EntrancyHandle* E = Enter(Head, Key);
     if(E == NULL) {
       fprintf(stderr, "No [%s] Plugin Found\n", Key);
@@ -65,9 +89,6 @@ int main(int argc, char** argv) {
   DIR* cwd;
   struct dirent* cwf;
   char LIB[6] = "./lib";
-
-  typedef int* (*register_WMReader_function)(struct Book* (*read_callback)(struct Book*));
-  typedef int* (*register_WMWriter_function)(struct Library* (*write_callback)(struct Book*));
 
   if (argc > 1) {
     fprintf(stderr, "Arguments Not Supported");
@@ -121,16 +142,12 @@ int main(int argc, char** argv) {
             Head->L = L;
             Head->n = NULL;
             Tail = Head;
-            write_callback writer = (write_callback)(Head->L->h->n->h->i);
-            read_callback reader = (read_callback)(Head->L->h->n->n->h->i);
-            writer(Head->L->h);
-            reader(Head->L->h);
             register_WMReader_function regreader = (register_WMReader_function) dlsym(libHandle, "RegisterWMReader");
             regreader(Read);
             register_WMWriter_function regwriter = (register_WMWriter_function) dlsym(libHandle, "RegisterWMWriter");
             regwriter(Write);
-            writer(Head->L->h);
-            reader(Head->L->h);
+            CallWrite(cwf->d_name, Head->L->h);
+            CallRead(cwf->d_name, Head->L->h);
             EntranceCount++;
           } else if(Head != NULL) {
             struct EntrancyHandle* E = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
@@ -140,16 +157,12 @@ int main(int argc, char** argv) {
             E->n = NULL;
             Tail->n = E;
             Tail = E;
-            write_callback writer = (write_callback)(Tail->L->h->n->h->i);
-            read_callback reader = (read_callback)(Tail->L->h->n->n->h->i);
-            writer(Tail->L->h);
-            reader(Tail->L->h);
             register_WMReader_function regreader = (register_WMReader_function) dlsym(libHandle, "RegisterWMReader");
             regreader(Read);
             register_WMWriter_function regwriter = (register_WMWriter_function) dlsym(libHandle, "RegisterWMWriter");
             regwriter(Write);
-            writer(Head->L->h);
-            reader(Head->L->h);
+            CallWrite(cwf->d_name, Head->L->h);
+            CallRead(cwf->d_name, Head->L->h);
             EntranceCount++;
           }
         } else {
@@ -165,11 +178,19 @@ int main(int argc, char** argv) {
     usleep(1000000);
     argc++;
     if(argc == 4) {
-      CallSignal("PHTTPS", 1);
+      struct Book* M = (struct Book*)malloc(sizeof(struct Book));
+      struct Page* C = (struct Page*)malloc(sizeof(struct Page));
+      M->i = 5;
+      M->h = C;
+      C->c = K;
+      C->i = "python3.13 /home/mariarahel/src/wm/python/https.py 2>&1";
+      CallWrite("POPEN", M);
+      free(C);
+      free(M);
     }
 
     if(argc >= 5) {
-      CallSignal("PHTTPS", 0);
+      CallSignal("POPEN", 0);
     }
   }
 

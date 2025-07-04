@@ -57,20 +57,17 @@ int Signal(int n) {
         flags |= O_NONBLOCK;
         fcntl(pfd, F_SETFL, flags);
 
-        while(!feof(pout)) {
-            if(fgets(buffer, sizeof(buffer) - 1, pout) != NULL) {
-                buffer[sizeof(buffer) - 1] = '\0';
-                struct Book* M = (struct Book*)malloc(sizeof(struct Book));
-                struct Page* C = (struct Page*)malloc(sizeof(struct Page));
-                M->i = 2;
-                M->h = C;
-                C->c = K;
-                C->i = buffer;
-                WriteWM(M);
-                free(C);
-                free(M);
-            }
-            return 0;
+        if(fgets(buffer, sizeof(buffer) - 1, pout) != NULL) {
+            buffer[sizeof(buffer) - 1] = '\0';
+            struct Book* M = (struct Book*)malloc(sizeof(struct Book));
+            struct Page* C = (struct Page*)malloc(sizeof(struct Page));
+            M->i = 2;
+            M->h = C;
+            C->c = K;
+            C->i = buffer;
+            WriteWM(M);
+            free(C);
+            free(M);
         }
     } else {
         /*printf("Received Signal %d\n", n);*/
