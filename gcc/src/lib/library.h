@@ -4,7 +4,11 @@
 enum Category {
     K,
     KVP,
-    IO
+    IO,
+    WRITER,
+    READER,
+    TEXT,
+    POPEN
 };
 
 struct Page {

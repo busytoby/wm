@@ -20,14 +20,16 @@ typedef int* (*register_WMWriter_function)(struct Library* (*write_callback)(str
 typedef int (*signal_fptr)(int);
 
 struct Library* Write(struct Book* B) {
-    printf("Write WM Test\n");
+    printf("Write WM Test [\n");
     printf("%s\n", (char*)B->h->i);
+    printf("]\n");
     return NULL;
 }
 
 struct Book* Read(struct Book* B) {
-    printf("Read WM Test\n");
+    printf("Read WM Test [\n");
     printf("%s\n", (char*)B->h->i);
+    printf("]\n");
     return NULL;
 }
 
@@ -180,7 +182,7 @@ int main(int argc, char** argv) {
     if(argc == 4) {
       struct Book* M = (struct Book*)malloc(sizeof(struct Book));
       struct Page* C = (struct Page*)malloc(sizeof(struct Page));
-      M->i = 5;
+      M->i = POPEN;
       M->h = C;
       C->c = K;
       C->i = "python3.13 /home/mariarahel/src/wm/python/https.py 2>&1";
