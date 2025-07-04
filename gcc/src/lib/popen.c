@@ -19,15 +19,7 @@ struct Process* HEAD = NULL;
 struct Process* TAIL = NULL;
 
 struct Library* Entrance() {
-    struct Library* E = Key("POPEN");
-
-    E->h->n = IOWriter(Write);
-    E->h->n->i = WRITER;
-    E->h->n->p = E->h;
-    E->h->n->n = IOReader(Read);
-    E->h->n->n->i = READER;
-    E->h->n->n->p = E->h->n;
-    return E;
+    return Plugin("POPEN");
 }
 
 struct Library* Write(struct Book* B) {
@@ -80,15 +72,10 @@ int Signal(int n) {
 
             if(fgets(buffer, sizeof(buffer) - 1, p->pout) != NULL) {
                 buffer[sizeof(buffer) - 1] = '\0';
-                struct Book* M = (struct Book*)malloc(sizeof(struct Book));
-                struct Page* C = (struct Page*)malloc(sizeof(struct Page));
-                M->i = TEXT;
-                M->h = C;
-                C->c = K;
-                C->i = buffer;
-                WriteWM(M);
-                free(C);
-                free(M);
+                struct Book* T = TextBook(buffer);
+                WriteWM(T);
+                free(T->h);
+                free(T);
             }
             p = p->n;
         }

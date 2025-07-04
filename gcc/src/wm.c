@@ -21,14 +21,14 @@ typedef int (*signal_fptr)(int);
 
 struct Library* Write(struct Book* B) {
     printf("Write WM Test [\n");
-    printf("%s\n", (char*)B->h->i);
+    printf("%s", (char*)B->h->i);
     printf("]\n");
     return NULL;
 }
 
 struct Book* Read(struct Book* B) {
     printf("Read WM Test [\n");
-    printf("%s\n", (char*)B->h->i);
+    printf("%s", (char*)B->h->i);
     printf("]\n");
     return NULL;
 }

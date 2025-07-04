@@ -28,6 +28,10 @@ struct Library {
     struct Book* h;
 };
 
+struct Book* Read(struct Book*);
+struct Library* Pass(struct Library*);
+struct Library* Write(struct Book*);
+
 struct Library* L() {
     struct Library* E = (struct Library*)malloc(sizeof(struct Library));
     struct Book* M = (struct Book*)malloc(sizeof(struct Book));
@@ -64,6 +68,17 @@ struct Library* Key(char* keydata) {
     E->h->h->c = K;
     E->h->h->i = keydata;
     return E;
+}
+
+struct Library* Plugin(char *name) {
+    struct Library* L = Key(name);
+    L->h->n = IOWriter(Write);
+    L->h->n->i = WRITER;
+    L->h->n->p = L->h;
+    L->h->n->n = IOReader(Read);
+    L->h->n->n->i = READER;
+    L->h->n->n->p = L->h->n;
+    return L;
 }
 
 struct Book* TextBook(char *buffer) {
