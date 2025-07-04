@@ -18,11 +18,13 @@ typedef struct Book* (*read_callback)(struct Book*);
 
 struct Library* Write(struct Book* B) {
     printf("Write WM Test\n");
+    printf("%s", (char*)B->h->i);
     return NULL;
 }
 
 struct Book* Read(struct Book* B) {
     printf("Read WM Test\n");
+    printf("%s", (char*)B->h->i);
     return NULL;
 }
 
@@ -42,7 +44,7 @@ struct EntrancyHandle* Enter(struct EntrancyHandle* E, char *f) {
 }
 
 int CallSignal(char *Key, int Signal) {
-    typedef int* (*signal_fptr)(int);
+    typedef int (*signal_fptr)(int);
     struct EntrancyHandle* E = Enter(Head, Key);
     if(E == NULL) {
       fprintf(stderr, "No [%s] Plugin Found\n", Key);
@@ -55,7 +57,7 @@ int CallSignal(char *Key, int Signal) {
         dlclose(E->h);
         return EXIT_FAILURE;
     }
-    return (int)signal(Signal);
+    return signal(Signal);
 }
 
 int main(int argc, char** argv) {
@@ -164,6 +166,10 @@ int main(int argc, char** argv) {
     argc++;
     if(argc == 4) {
       CallSignal("PHTTPS", 1);
+    }
+
+    if(argc >= 5) {
+      CallSignal("PHTTPS", 0);
     }
   }
 
