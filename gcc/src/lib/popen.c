@@ -47,6 +47,12 @@ struct Library* Write(struct Book* B) {
             fprintf(stderr, "ERROR: Process Tail Was Not Clear");
         }
         printf("POPEN: %s\n", (char*)B->h->i);
+    } else {
+        printf("[\n");
+        if(ReadWM != NULL)
+            ReadWM(B);
+        printf("] Write POPEN Test\n");
+        return NULL;
     }
     return NULL;
 }
@@ -93,9 +99,10 @@ int Signal(int n) {
 }
 
 struct Book* Read(struct Book* B) {
-    printf("Read PHTTPS Test\n");
+    printf("Read POPEN Test [\n");
     if(WriteWM != NULL)
         WriteWM(B);
+    printf("]\n");
     return NULL;
 }
 
