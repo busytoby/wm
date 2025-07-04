@@ -59,10 +59,29 @@ struct Book* IOReader(struct Book* (*callback_reader_function)(struct Book*)) {
     return M;
 }
 
-
 struct Library* Key(char* keydata) {
     struct Library* E = L();
     E->h->h->c = K;
     E->h->h->i = keydata;
     return E;
+}
+
+struct Book* TextBook(char *buffer) {
+    struct Book* M = (struct Book*)malloc(sizeof(struct Book));
+    struct Page* C = (struct Page*)malloc(sizeof(struct Page));
+    M->i = TEXT;
+    M->h = C;
+    C->c = K;
+    C->i = buffer;
+    return M;
+}
+
+struct Book* Launch(char* cmd) {
+    struct Book* M = (struct Book*)malloc(sizeof(struct Book));
+    struct Page* C = (struct Page*)malloc(sizeof(struct Page));
+    M->i = POPEN;
+    M->h = C;
+    C->c = K;
+    C->i = cmd;
+    return M;
 }

@@ -180,15 +180,10 @@ int main(int argc, char** argv) {
     usleep(1000000);
     argc++;
     if(argc == 4) {
-      struct Book* M = (struct Book*)malloc(sizeof(struct Book));
-      struct Page* C = (struct Page*)malloc(sizeof(struct Page));
-      M->i = POPEN;
-      M->h = C;
-      C->c = K;
-      C->i = "python3.13 /home/mariarahel/src/wm/python/https.py 2>&1";
-      CallWrite("POPEN", M);
-      free(C);
-      free(M);
+      struct Book* P = Launch("python3.13 /home/mariarahel/src/wm/python/https.py 2>&1");
+      CallWrite("POPEN", P);
+      free(P->h);
+      free(P);
     }
 
     if(argc >= 5) {
