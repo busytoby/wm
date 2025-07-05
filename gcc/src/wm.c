@@ -149,8 +149,8 @@ int main(int argc, char** argv) {
             regreader(Read);
             register_WMWriter_function regwriter = (register_WMWriter_function) dlsym(libHandle, "RegisterWMWriter");
             regwriter(Write);
-            CallWrite(cwf->d_name, Head->L->h);
-            CallRead(cwf->d_name, Head->L->h);
+            CallWrite("MAIN", Head->L->h);
+            CallRead("MAIN", Head->L->h);
             EntranceCount++;
           } else if(Head != NULL) {
             struct EntrancyHandle* E = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
@@ -164,8 +164,8 @@ int main(int argc, char** argv) {
             regreader(Read);
             register_WMWriter_function regwriter = (register_WMWriter_function) dlsym(libHandle, "RegisterWMWriter");
             regwriter(Write);
-            CallWrite(cwf->d_name, Head->L->h);
-            CallRead(cwf->d_name, Head->L->h);
+            CallWrite("MAIN", Tail->L->h);
+            CallRead("MAIN", Tail->L->h);
             EntranceCount++;
           }
         } else {
