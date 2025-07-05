@@ -9,9 +9,6 @@ struct Library* Entrance();
 read_callback ReadWM;
 write_callback WriteWM;
 int Signal(int);
-struct Book* Read(struct Book*);
-struct Library* Pass(struct Library*);
-struct Library* Write(struct Book*);
 
 int RegisterWMReader(read_callback r) {
     printf("Registering Reader\n");

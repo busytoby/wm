@@ -40,10 +40,7 @@ struct Library* Write(struct Book* B) {
         }
         printf("POPEN: %s\n", (char*)B->h->i);
     } else {
-        printf("[\n");
-        if(ReadWM != NULL)
-            ReadWM(B);
-        printf("] Write POPEN Test\n");
+        fprintf(stderr, "Write Type %lld Not Yet Implemented\n", B->i);
         return NULL;
     }
     return NULL;

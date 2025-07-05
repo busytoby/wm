@@ -19,20 +19,6 @@ typedef int* (*register_WMReader_function)(struct Book* (*read_callback)(struct 
 typedef int* (*register_WMWriter_function)(struct Library* (*write_callback)(struct Book*));
 typedef int (*signal_fptr)(int);
 
-struct Library* Write(struct Book* B) {
-    printf("Write WM Test [\n");
-    printf("%s", (char*)B->h->i);
-    printf("]\n");
-    return NULL;
-}
-
-struct Book* Read(struct Book* B) {
-    printf("Read WM Test [\n");
-    printf("%s", (char*)B->h->i);
-    printf("]\n");
-    return NULL;
-}
-
 struct EntrancyHandle {
   void *h;
   char *f;
@@ -66,7 +52,13 @@ int CallRead(char* Key, struct Book* B) {
       return EXIT_FAILURE;
     }
     read_callback reader = (read_callback)(E->L->h->n->n->h->i);
-    reader(B);
+    struct Book* A = reader(B);
+    if(A == NULL) return 0;
+    if(A->i == K) {
+      printf("Read K: %s\n", (char *)A->h->i);
+    } else {
+      fprintf(stderr, "No Read Handler Implemented For Type %lld", A->i);
+    }
     return 0;
 }
 
@@ -90,27 +82,36 @@ int main(int argc, char** argv) {
   int EntranceCount = 0;
   DIR* cwd;
   struct dirent* cwf;
-  char LIB[6] = "./lib";
+  char WM[255];
+  char WMFOLDER[255];
+  char WMLIB[255] = "/lib";
+  readlink("/proc/self/exe", WM, 255);
+  for(struct { int i; bool b; } f = { strlen(WM), false }; f.i>=0; f.i--) {
+    if(!f.b && WM[f.i] == '/') f.b = true;
+    else WMFOLDER[f.i] = WM[f.i]; 
+  }
+  fprintf(stderr, "Starting In %s\n", WMFOLDER);
+  strcat(WMFOLDER, WMLIB);
 
   if (argc > 1) {
-    fprintf(stderr, "Arguments Not Supported");
+    fprintf(stderr, "Arguments Not Supported\n");
     return EXIT_FAILURE;
   }
 
   while(1) {
-    cwd = opendir(LIB);
+    cwd = opendir(WMFOLDER);
     if(cwd == NULL) {
-      fprintf(stderr, "No Library Folder Found");
+      fprintf(stderr, "No Library Folder Found At %s\n", WMFOLDER);
       return EXIT_FAILURE;
     }
 
     while((cwf = readdir(cwd))) {
       struct stat cws;
-      char fullPath[40] = "";
+      char fullPath[255] = "";
 
       if(Enter(Head, cwf->d_name) != NULL) continue;
 
-      strcat(fullPath, LIB);
+      strcat(fullPath, WMFOLDER);
       strcat(fullPath, "/");
       strcat(fullPath, cwf->d_name);
  
@@ -148,8 +149,8 @@ int main(int argc, char** argv) {
             regreader(Read);
             register_WMWriter_function regwriter = (register_WMWriter_function) dlsym(libHandle, "RegisterWMWriter");
             regwriter(Write);
-            CallWrite(cwf->d_name, Tail->L->h);
-            CallRead(cwf->d_name, Tail->L->h);
+            CallWrite(cwf->d_name, Head->L->h);
+            CallRead(cwf->d_name, Head->L->h);
             EntranceCount++;
           } else if(Head != NULL) {
             struct EntrancyHandle* E = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
@@ -163,8 +164,8 @@ int main(int argc, char** argv) {
             regreader(Read);
             register_WMWriter_function regwriter = (register_WMWriter_function) dlsym(libHandle, "RegisterWMWriter");
             regwriter(Write);
-            CallWrite(cwf->d_name, Tail->L->h);
-            CallRead(cwf->d_name, Tail->L->h);
+            CallWrite(cwf->d_name, Head->L->h);
+            CallRead(cwf->d_name, Head->L->h);
             EntranceCount++;
           }
         } else {
@@ -194,4 +195,18 @@ int main(int argc, char** argv) {
   printf("Finished\n");
   closedir(cwd);
   return 0;
+}
+
+struct Library* Write(struct Book* B) {
+    printf("Write WM To MAIN Test [\n");
+    CallWrite("MAIN", B);
+    printf("]\n");
+    return NULL;
+}
+
+struct Book* Read(struct Book* B) {
+    printf("Read WM Test [\n");
+    printf("%s", (char*)B->h->i);
+    printf("]\n");
+    return NULL;
 }
