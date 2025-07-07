@@ -46,7 +46,8 @@ struct Library* Write(struct Book* B) {
     return NULL;
 }
 
-int Signal(int n) {     
+int Signal(int n) {    
+    //printf("Received Signal %d\n", n);
     if(n == -1) {
         fprintf(stderr, "Killall not yet implemented\n");
         /*
@@ -70,6 +71,7 @@ int Signal(int n) {
             if(fgets(buffer, sizeof(buffer) - 1, p->pout) != NULL) {
                 buffer[sizeof(buffer) - 1] = '\0';
                 struct Book* T = TextBook(buffer);
+                //fprintf(stderr, "Read\n%s\n", buffer);
                 WriteWM(T);
                 free(T->h);
                 free(T);

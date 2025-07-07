@@ -1,5 +1,6 @@
 import http.server
 import ssl
+import sys
 from io import BytesIO
 from urllib.parse import urlparse
 
@@ -34,5 +35,5 @@ with http.server.HTTPServer((HOST, PORT), hrHandler) as httpd:
     ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ctx.load_cert_chain(certfile='/home/mariarahel/src/wm/python/dystest.pem')
     httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
-    print(f"Serving HTTPS on {HOST}:{PORT}")
+    print(f"Serving HTTPS on {HOST}:{PORT}", file=sys.stderr)
     httpd.serve_forever()

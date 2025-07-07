@@ -120,14 +120,14 @@ int main(int argc, char** argv) {
 }
 
 struct Library* Write(struct Book* B) {
-    printf("wWM [");
+    printf("wWM [\n");
     CallWrite("MAIN", B);
     printf("]\n");
     return NULL;
 }
 
 struct Book* Read(struct Book* B) {
-    printf("rWM [");
+    printf("rWM [\n");
     printf("%s", (char*)B->h->i);
     printf("]\n");
     return NULL;

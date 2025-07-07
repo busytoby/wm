@@ -52,7 +52,7 @@ struct EntrancyHandle* unloadPlugin(char* name) {
     if(E == NULL) return Head;
     if(E != Y) while(Y->n != E) Y = Y->n;
     if(E->h == NULL) return E;
-    fprintf(stderr, "Unloading Plugin %s", name);
+    fprintf(stderr, "Unload Plugin %s", name);
     dlclose(E->h);
     E->h = NULL;
     fprintf(stderr, " Done !\n");
@@ -87,7 +87,7 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
     E = Enter(Head, cwf->d_name);
     if(E != NULL) {
       if (E->h != NULL) continue;
-      else fprintf(stderr, "Reloading %s\n", cwf->d_name);
+      //else fprintf(stderr, "Reloading %s\n", cwf->d_name);
     }
 
     strcat(fullPath, folder);
@@ -99,15 +99,14 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
       return NULL;
     }
 
-    if(E != NULL && E->h == NULL)
-        fprintf(stderr, "Detected Unloaded Library %s\n", E->f);
+    //if(E != NULL && E->h == NULL) fprintf(stderr, "Detected Unloaded Library %s\n", E->f);
 
     if(S_ISREG(cws.st_mode)) {
       void *libHandle;
 
-      printf("Scanning: %s\n", fullPath);
+      //printf("Scanning: %s\n", fullPath);
       if(E == NULL || E->h == NULL) {
-        printf("Scanning: %s\n", cwf->d_name);
+        //printf("Scanning: %s\n", cwf->d_name);
         if(E == NULL) E = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
       }
       //fprintf(stderr, "ehnull: %b\n", (E->h == NULL));
@@ -136,7 +135,7 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
         E->p = strdup(fullPath);
         E->L = L;
 
-        fprintf(stderr, "Storing %s (%s)\n", E->f, E->p);
+        //fprintf(stderr, "Storing %s (%s)\n", E->f, E->p);
 
         if(Head == NULL && strcmp((char*)L->h->h->i, "MAIN") == 0) {
           Head = Tail = E;
