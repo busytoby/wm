@@ -12,6 +12,7 @@
 struct EntrancyHandle {
   void *h;
   char *f;
+  char *p;
   struct Library* L;
   struct EntrancyHandle* n;
 };
@@ -23,9 +24,10 @@ typedef int* (*register_WMWriter_function)(struct Library* (*write_callback)(str
 struct EntrancyHandle* Head;
 struct EntrancyHandle* Tail;
 
-struct EntrancyHandle* Enter(struct EntrancyHandle* E, char *f) {
+struct EntrancyHandle* Enter(struct EntrancyHandle* E, char* f) {
   if(E == NULL) return NULL;
   if(strcmp(E->f, f) == 0) return E;
+  if(strcmp(E->p, f) == 0) return E;
   if(strcmp(E->L->h->h->i, f) == 0) return E;  
   if(!E->n) return NULL;
   return Enter(E->n, f);
@@ -42,6 +44,19 @@ char* getLibFolder(char* LibFolder) {
   }
   strcat(LibFolder, WMLIB);
   return LibFolder;
+}
+
+struct EntrancyHandle* unloadPlugin(char* name) {
+    struct EntrancyHandle* Y = Head;
+    struct EntrancyHandle* E = Enter(Head, name);
+    if(E == NULL) return Head;
+    if(E != Y) while(Y->n != E) Y = Y->n;
+    if(E->h == NULL) return E;
+    fprintf(stderr, "Unloading Plugin %s", name);
+    dlclose(E->h);
+    E->h = NULL;
+    fprintf(stderr, " Done !\n");
+    return E;
 }
 
 struct EntrancyHandle* scanLib(char* arg, char* folder) {
@@ -62,8 +77,18 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
   while((cwf = readdir(cwd))) {
     struct stat cws;
     char fullPath[255] = "";
+    struct EntrancyHandle *E;
 
-    if(Enter(Head, cwf->d_name) != NULL) continue;
+    //int c = 0;
+    //E=Head;
+    //while(E != NULL) { fprintf(stderr, "elib %s (%s)\n", E->f, E->p); E = E->n; c++; }
+    //fprintf(stderr, "LibCount: %d\n", c);
+
+    E = Enter(Head, cwf->d_name);
+    if(E != NULL) {
+      if (E->h != NULL) continue;
+      else fprintf(stderr, "Reloading %s\n", cwf->d_name);
+    }
 
     strcat(fullPath, folder);
     strcat(fullPath, "/");
@@ -74,9 +99,19 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
       return NULL;
     }
 
+    if(E != NULL && E->h == NULL)
+        fprintf(stderr, "Detected Unloaded Library %s\n", E->f);
+
     if(S_ISREG(cws.st_mode)) {
-      printf("Scanning: %s\n", cwf->d_name);
-      void *libHandle = dlopen(fullPath, RTLD_LAZY);
+      void *libHandle;
+
+      printf("Scanning: %s\n", fullPath);
+      if(E == NULL || E->h == NULL) {
+        printf("Scanning: %s\n", cwf->d_name);
+        if(E == NULL) E = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
+      }
+      //fprintf(stderr, "ehnull: %b\n", (E->h == NULL));
+      libHandle = (E->h != NULL) ? E->h : dlopen(fullPath, RTLD_LAZY);
 
       if(!libHandle) {
         fprintf(stderr, "Error: %s\n", dlerror());
@@ -93,13 +128,20 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
       struct Library* L = library_entrancy_function();
       if(L->h->h->c == K) {
         printf("Entrancy Library Key: %s\n", (char*)L->h->h->i);
-        struct EntrancyHandle* E = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
+        if(E == NULL) E = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
         E->h = libHandle;
-        E->f = cwf->d_name;
+        if(E->f != NULL) free(E->f);
+        E->f = strdup(cwf->d_name);
+        if(E->p != NULL) free(E->p);
+        E->p = strdup(fullPath);
         E->L = L;
-        E->n = NULL;
+
+        fprintf(stderr, "Storing %s (%s)\n", E->f, E->p);
+
         if(Head == NULL && strcmp((char*)L->h->h->i, "MAIN") == 0) {
           Head = Tail = E;
+        } else if(strcmp((char*)L->h->h->i, "MAIN") == 0) {
+
         } else if(Head != NULL) {
           Tail->n = E;
           Tail = E;
@@ -115,9 +157,11 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
     }
   }
   closedir(cwd);
-    /*
-        CallWrite("MAIN", Tail->L->h);
-        CallRead("MAIN", Tail->L->h);
-    */
+
+  //int c = 0;
+  //struct EntrancyHandle* E=Head;
+  //while(E != NULL) { fprintf(stderr, "final elib %s (%s)\n", E->f, E->p); E = E->n; c++; }
+  //fprintf(stderr, "Final LibCount: %d\n", c);
+
   return Head;
 }

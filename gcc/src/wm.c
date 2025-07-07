@@ -9,9 +9,14 @@ typedef struct Book* (*read_callback)(struct Book*);
 typedef int (*signal_fptr)(int);
 
 int CallWrite(char* Key, struct Book* B) {
+    //fprintf(stderr, "CallWrite\n");
     struct EntrancyHandle* E = Enter(Head, Key);
     if(E == NULL) {
       fprintf(stderr, "No [%s] Plugin Found\n", Key);
+      return EXIT_FAILURE;
+    }
+    if(E->h == NULL) {
+      fprintf(stderr, "Cannot Write To Closed DLL\n");
       return EXIT_FAILURE;
     }
     write_callback writer = (write_callback)(E->L->h->n->h->i);
@@ -20,9 +25,14 @@ int CallWrite(char* Key, struct Book* B) {
 }
 
 int CallRead(char* Key, struct Book* B) {
+    //fprintf(stderr, "CallRead\n");
     struct EntrancyHandle* E = Enter(Head, Key);
     if(E == NULL) {
       fprintf(stderr, "No [%s] Plugin Found\n", Key);
+      return EXIT_FAILURE;
+    }
+    if(E->h == NULL) {
+      fprintf(stderr, "Cannot Read From Closed DLL\n");
       return EXIT_FAILURE;
     }
     read_callback reader = (read_callback)(E->L->h->n->n->h->i);
@@ -40,6 +50,11 @@ int CallSignal(char *Key, int Signal) {
     struct EntrancyHandle* E = Enter(Head, Key);
     if(E == NULL) {
       fprintf(stderr, "No [%s] Plugin Found\n", Key);
+      return EXIT_FAILURE;
+    }
+
+    if(E->h == NULL) {
+      fprintf(stderr, "Cannot Signal To Closed DLL\n");
       return EXIT_FAILURE;
     }
 
@@ -82,15 +97,22 @@ int main(int argc, char** argv) {
     usleep(1000000);
     argc++;
     if(argc == 4) {
+      //fprintf(stderr, "Launching HTTPD\n");
       struct Book* P = Launch("python3.13 /home/mariarahel/src/wm/python/https.py 2>&1");
       CallWrite("POPEN", P);
       free(P->h);
       free(P);
+      //fprintf(stderr, "HTTPD Launched\n");
     }
 
     if(argc >= 5) {
+      //fprintf(stderr, "Calling POPEN\n");
       CallSignal("POPEN", 0);
+      //fprintf(stderr, "POPEN Called\n");
     }
+
+    if(argc >= 6 && (argc % 5 == 0))
+      unloadPlugin("MAIN");
   } while((E = scanLib(NULL, WMLIBFOLDER)) != NULL);
 
   printf("Finished\n");
@@ -98,14 +120,14 @@ int main(int argc, char** argv) {
 }
 
 struct Library* Write(struct Book* B) {
-    printf("Write WM To MAIN Test [\n");
+    printf("wWM [");
     CallWrite("MAIN", B);
     printf("]\n");
     return NULL;
 }
 
 struct Book* Read(struct Book* B) {
-    printf("Read WM Test [\n");
+    printf("rWM [");
     printf("%s", (char*)B->h->i);
     printf("]\n");
     return NULL;
