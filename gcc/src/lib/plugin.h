@@ -33,9 +33,10 @@ struct EntrancyHandle* Enter(struct EntrancyHandle* E, char* f) {
   return Enter(E->n, f);
 }
 
-char* getLibFolder(char* LibFolder) {
+char* getLibFolder() {
   char WM[255];
   char WMLIB[255] = "/lib";
+  char LibFolder[255] = "";
 
   readlink("/proc/self/exe", WM, 255);
   for(struct { int i; bool b; } f = { strlen(WM), false }; f.i>=0; f.i--) {
@@ -43,7 +44,9 @@ char* getLibFolder(char* LibFolder) {
     else LibFolder[f.i] = WM[f.i]; 
   }
   strcat(LibFolder, WMLIB);
-  return LibFolder;
+  strcat(LibFolder, "/");
+  //fprintf(stderr, "Lib Folder: %s\n", LibFolder);
+  return strdup(LibFolder);
 }
 
 struct EntrancyHandle* unloadPlugin(char* name) {

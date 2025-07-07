@@ -68,8 +68,7 @@ int CallSignal(char *Key, int Signal) {
 }
 
 int main(int argc, char** argv) {
-  char WMLIBFOLDER[255];
-  getLibFolder(WMLIBFOLDER);
+  char* WMLIBFOLDER = getLibFolder();
   printf("Folder: %s\n", WMLIBFOLDER);
 
   if (argc > 1) {
