@@ -10,6 +10,7 @@ enum CompileType {
 };
 
 struct CompileTarget {
+    char* i;
     char* f;
     char* d;
     struct CompileTarget* n;
@@ -20,7 +21,7 @@ struct CompileTarget {
 struct CompileTarget* HEAD;
 struct CompileTarget* TAIL;
 
-struct CompileTarget* addCompileTarget(char* source, char* target) {
+struct CompileTarget* addCompileTarget(char* identifier, char* source, char* target) {
     struct CompileTarget* T = (struct CompileTarget*)malloc(sizeof(struct CompileTarget));
     char* binlib;
     char f[255] = "";
@@ -29,6 +30,7 @@ struct CompileTarget* addCompileTarget(char* source, char* target) {
     binlib = getLibFolder();
     //fprintf(stderr, "CTLib Folder: %s\n", binlib);
 
+    T->i = strdup(identifier);
     sprintf(f, "%s../../src/lib/%s", binlib, source);
     T->f = strdup(f);
     sprintf(d, "%s%s", binlib, target);
@@ -37,7 +39,7 @@ struct CompileTarget* addCompileTarget(char* source, char* target) {
     stat(T->f, &attr);
     T->m = attr.st_mtime;
     T->t = CSOURCE;
-    fprintf(stderr, "Compile Target: %s (%s) [%ld]\n", T->f, T->d, T->m);
+    fprintf(stderr, "Compile Target: %s %s (%s) [%ld]\n", T->i, T->f, T->d, T->m);
     if(HEAD == NULL) HEAD = TAIL = T;
     else if(HEAD->n == NULL || TAIL == NULL) HEAD->n = TAIL = T;
     else {
@@ -49,13 +51,21 @@ struct CompileTarget* addCompileTarget(char* source, char* target) {
 }
 
 int Signal(int n) {    
-    printf("Received Signal %d\n", n);    
+    //printf("Received Signal %d\n", n);    
     if(n == 1) {
         struct CompileTarget* T = HEAD;
         struct stat attr;
+        char gcc[255];
         while(T != NULL) {                
             stat(T->f, &attr);
-            printf("%ld // %ld\n", attr.st_mtime, T->m);
+            if(attr.st_mtime > T->m) {
+                fprintf(stderr, "Detected Change In %s (%s)\n", T->d, T->f);
+                //gcc -g -shared -fPIC $CFLAGS -o bin/lib/main.so.0.0.1 src/lib/main.c
+                remove(T->d);
+                sprintf(gcc, "gcc -g -shared -fPIC -Wall -o %s %s", T->d, T->f);;               
+                popen(gcc, "r");
+                T->m = attr.st_mtime;
+            }
             T = T->n;
         }
     } else {
@@ -72,9 +82,9 @@ struct Library* Write(struct Book* B) {
 }
 
 struct Library* Entrance() {
-    addCompileTarget("main.c", "main.so.0.0.1");
-    addCompileTarget("hot.c", "hot.so.0.0.1");
-    addCompileTarget("popen.c", "popen.so.0.0.1");
+    addCompileTarget("MAIN", "main.c", "main.so.0.0.1");
+    addCompileTarget("HOT", "hot.c", "hot.so.0.0.1");
+    addCompileTarget("POPEN", "popen.c", "popen.so.0.0.1");
     return Plugin("HOT");
 }
 

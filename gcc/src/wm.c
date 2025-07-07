@@ -113,9 +113,6 @@ int main(int argc, char** argv) {
     if(argc > 6) {
       CallSignal("HOT", 1);
     }
-
-    if(argc >= 6 && (argc % 5 == 0))
-      unloadPlugin("MAIN");
   } while((E = scanLib(NULL, WMLIBFOLDER)) != NULL);
 
   printf("Finished\n");

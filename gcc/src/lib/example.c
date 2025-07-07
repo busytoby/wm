@@ -7,7 +7,7 @@
 struct Library* Write(struct Book* B) {
     printf("B->i TYPE %lld Not Yet Implemented [\n", B->i);
     printf(B->h->i);
-    printf("\n] Write MAIN Test\n");
+    printf("\n] Write EXAMPLE Test\n");
     return NULL;
 }
 

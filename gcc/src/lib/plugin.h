@@ -15,6 +15,7 @@ struct EntrancyHandle {
   char *p;
   struct Library* L;
   struct EntrancyHandle* n;
+  time_t m;
 };
 
 struct Library* (*library_entrancy_function)();
@@ -50,15 +51,13 @@ char* getLibFolder() {
 }
 
 struct EntrancyHandle* unloadPlugin(char* name) {
-    struct EntrancyHandle* Y = Head;
     struct EntrancyHandle* E = Enter(Head, name);
     if(E == NULL) return Head;
-    if(E != Y) while(Y->n != E) Y = Y->n;
     if(E->h == NULL) return E;
     fprintf(stderr, "Unload Plugin %s", name);
     dlclose(E->h);
     E->h = NULL;
-    fprintf(stderr, " Done !\n");
+    fprintf(stderr, " Done !\n");    
     return E;
 }
 
@@ -88,11 +87,7 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
     //fprintf(stderr, "LibCount: %d\n", c);
 
     E = Enter(Head, cwf->d_name);
-    if(E != NULL) {
-      if (E->h != NULL) continue;
-      //else fprintf(stderr, "Reloading %s\n", cwf->d_name);
-    }
-
+       
     strcat(fullPath, folder);
     strcat(fullPath, cwf->d_name);
  
@@ -101,16 +96,26 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
       return NULL;
     }
 
+    if(E != NULL) {
+      stat(fullPath, &cws);
+      if(E->m != cws.st_mtime) {
+        E = unloadPlugin(E->f);
+        fprintf(stderr, "Change Detected %s [%s]\n", E->f, E->p);
+      }
+      if (E->h != NULL) continue;
+      //else fprintf(stderr, "Reloading %s\n", cwf->d_name);
+    }
+
     //if(E != NULL && E->h == NULL) fprintf(stderr, "Detected Unloaded Library %s\n", E->f);
 
     if(S_ISREG(cws.st_mode)) {
       void *libHandle;
 
-      //printf("Scanning: %s\n", fullPath);
       if(E == NULL || E->h == NULL) {
-        //printf("Scanning: %s\n", cwf->d_name);
+        printf("Scanning: %s\n", fullPath);
         if(E == NULL) E = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
       }
+
       //fprintf(stderr, "ehnull: %b\n", (E->h == NULL));
       libHandle = (E->h != NULL) ? E->h : dlopen(fullPath, RTLD_LAZY);
 
@@ -128,6 +133,7 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
 
       struct Library* L = library_entrancy_function();
       if(L->h->h->c == K) {
+        struct stat attr;
         printf("Entrancy Library Key: %s\n", (char*)L->h->h->i);
         if(E == NULL) E = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
         E->h = libHandle;
@@ -136,21 +142,30 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
         if(E->p != NULL) free(E->p);
         E->p = strdup(fullPath);
         E->L = L;
-
-        fprintf(stderr, "Storing %s (%s)\n", E->f, E->p);
+        stat(E->p, &attr);
+        E->m = attr.st_mtime;
 
         if(Head == NULL && strcmp((char*)L->h->h->i, "MAIN") == 0) {
           Head = Tail = E;
-        } else if(strcmp((char*)L->h->h->i, "MAIN") == 0) {
-
         } else if(Head != NULL) {
-          Tail->n = E;
-          Tail = E;
+          bool found = false;
+          Tail = Head;
+          if(Tail == E) found = true;
+          while(Tail->n != NULL) {
+            if(Tail->n == E) found = true;
+            Tail = Tail->n;
+          }
+          if(!found) {
+            Tail->n = E;
+            Tail = E;
+          }
         }
         register_WMReader_function regreader = (register_WMReader_function) dlsym(libHandle, "RegisterWMReader");
         regreader(Read);
         register_WMWriter_function regwriter = (register_WMWriter_function) dlsym(libHandle, "RegisterWMWriter");
         regwriter(Write);
+
+        fprintf(stderr, "Stored %s (%s)\n", E->f, E->p);
       } else {
         fprintf(stderr, "Error: Unsupported Library Type\n");
         return NULL;
