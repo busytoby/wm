@@ -94,7 +94,6 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
     }
 
     strcat(fullPath, folder);
-    strcat(fullPath, "/");
     strcat(fullPath, cwf->d_name);
  
     if(stat(fullPath, &cws) == -1) {
@@ -138,7 +137,7 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
         E->p = strdup(fullPath);
         E->L = L;
 
-        //fprintf(stderr, "Storing %s (%s)\n", E->f, E->p);
+        fprintf(stderr, "Storing %s (%s)\n", E->f, E->p);
 
         if(Head == NULL && strcmp((char*)L->h->h->i, "MAIN") == 0) {
           Head = Tail = E;

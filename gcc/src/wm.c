@@ -109,6 +109,10 @@ int main(int argc, char** argv) {
       CallSignal("POPEN", 0);
       //fprintf(stderr, "POPEN Called\n");
     }
+    
+    if(argc > 6) {
+      CallSignal("HOT", 1);
+    }
 
     if(argc >= 6 && (argc % 5 == 0))
       unloadPlugin("MAIN");

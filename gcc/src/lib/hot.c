@@ -3,13 +3,7 @@
 #include "plugin.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include "../bin/01_printTEXT.h"
-
-struct FileWatcher {
-    char* f;
-    uint fmt;
-};
 
 enum CompileType {
     CSOURCE,
@@ -20,6 +14,7 @@ struct CompileTarget {
     char* d;
     struct CompileTarget* n;
     enum CompileType t;
+    time_t m;
 };
 
 struct CompileTarget* HEAD;
@@ -30,20 +25,19 @@ struct CompileTarget* addCompileTarget(char* source, char* target) {
     char* binlib;
     char f[255] = "";
     char d[255] = "";
+    struct stat attr;
     binlib = getLibFolder();
     //fprintf(stderr, "CTLib Folder: %s\n", binlib);
 
-    strcat(f, binlib);
-    strcat(f, "../../");
-    strcat(f, strdup(source));
-    T->f = f;
-    strcat(d, binlib);
-    strcat(d, "");
-    strcat(d, strdup(target));
-    T->d = d;
-    fprintf(stderr, "Compile Target: %s (%s)\n", T->f, T->d);
+    sprintf(f, "%s../../src/lib/%s", binlib, source);
+    T->f = strdup(f);
+    sprintf(d, "%s%s", binlib, target);
+    T->d = strdup(d);
     T->n = NULL;
+    stat(T->f, &attr);
+    T->m = attr.st_mtime;
     T->t = CSOURCE;
+    fprintf(stderr, "Compile Target: %s (%s) [%ld]\n", T->f, T->d, T->m);
     if(HEAD == NULL) HEAD = TAIL = T;
     else if(HEAD->n == NULL || TAIL == NULL) HEAD->n = TAIL = T;
     else {
@@ -52,6 +46,22 @@ struct CompileTarget* addCompileTarget(char* source, char* target) {
     }
     free(binlib);
     return HEAD;
+}
+
+int Signal(int n) {    
+    printf("Received Signal %d\n", n);    
+    if(n == 1) {
+        struct CompileTarget* T = HEAD;
+        struct stat attr;
+        while(T != NULL) {                
+            stat(T->f, &attr);
+            printf("%ld // %ld\n", attr.st_mtime, T->m);
+            T = T->n;
+        }
+    } else {
+        /*printf("Received Signal %d\n", n);*/
+    }
+    return n;
 }
 
 struct Library* Write(struct Book* B) {
