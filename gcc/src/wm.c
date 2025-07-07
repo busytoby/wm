@@ -1,38 +1,12 @@
 #include "lib/library.h"
-#include <stdbool.h>
+#include "lib/plugin.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
-#include <dlfcn.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 
-struct EntrancyHandle* Head = NULL;
-struct EntrancyHandle* Tail = NULL;
-
-struct Library* (*library_entrancy_function)();
 typedef struct Library* (*write_callback)(struct Book*);
 typedef struct Book* (*read_callback)(struct Book*);
-typedef int* (*register_WMReader_function)(struct Book* (*read_callback)(struct Book*));
-typedef int* (*register_WMWriter_function)(struct Library* (*write_callback)(struct Book*));
 typedef int (*signal_fptr)(int);
-
-struct EntrancyHandle {
-  void *h;
-  char *f;
-  struct Library* L;
-  struct EntrancyHandle* n;
-};
-
-struct EntrancyHandle* Enter(struct EntrancyHandle* E, char *f) {
-  if(E == NULL) return NULL;
-  if(strcmp(E->f, f) == 0) return E;
-  if(strcmp(E->L->h->h->i, f) == 0) return E;  
-  if(!E->n) return NULL;
-  return Enter(E->n, f);
-}
 
 int CallWrite(char* Key, struct Book* B) {
     struct EntrancyHandle* E = Enter(Head, Key);
@@ -79,105 +53,32 @@ int CallSignal(char *Key, int Signal) {
 }
 
 int main(int argc, char** argv) {
-  int EntranceCount = 0;
-  DIR* cwd;
-  struct dirent* cwf;
-  char WM[255];
-  char WMFOLDER[255];
-  char WMLIB[255] = "/lib";
-  readlink("/proc/self/exe", WM, 255);
-  for(struct { int i; bool b; } f = { strlen(WM), false }; f.i>=0; f.i--) {
-    if(!f.b && WM[f.i] == '/') f.b = true;
-    else WMFOLDER[f.i] = WM[f.i]; 
-  }
-  fprintf(stderr, "Starting In %s\n", WMFOLDER);
-  strcat(WMFOLDER, WMLIB);
+  char WMLIBFOLDER[255];
+  getLibFolder(WMLIBFOLDER);
+  printf("Folder: %s\n", WMLIBFOLDER);
 
   if (argc > 1) {
     fprintf(stderr, "Arguments Not Supported\n");
     return EXIT_FAILURE;
   }
 
-  while(1) {
-    cwd = opendir(WMFOLDER);
-    if(cwd == NULL) {
-      fprintf(stderr, "No Library Folder Found At %s\n", WMFOLDER);
-      return EXIT_FAILURE;
+  /* Pass One */
+  struct EntrancyHandle* E = scanLib(NULL, WMLIBFOLDER);
+  if(E == NULL) {
+    fprintf(stderr, "No Libraries Found\n");
+    return EXIT_FAILURE;
+  }
+
+  do {
+    /* Pass Two */
+    /*
+    while((E = scanLib(overt, WMLIBFOLDER)) != NULL) {
+      Do Stuff
     }
+    */
 
-    while((cwf = readdir(cwd))) {
-      struct stat cws;
-      char fullPath[255] = "";
-
-      if(Enter(Head, cwf->d_name) != NULL) continue;
-
-      strcat(fullPath, WMFOLDER);
-      strcat(fullPath, "/");
-      strcat(fullPath, cwf->d_name);
- 
-      if(stat(fullPath, &cws) == -1) {
-        fprintf(stderr, "stat failure");
-        return EXIT_FAILURE;
-      }
-      if(S_ISREG(cws.st_mode)) {
-        printf("Potential Library: %s\n", cwf->d_name);
-        void *libHandle = dlopen(fullPath, RTLD_LAZY);
-
-	      if(!libHandle) {
-          fprintf(stderr, "Error: %s\n", dlerror());
-          return EXIT_FAILURE;
-        }
-
-        *(struct Library**)(&library_entrancy_function) = dlsym(libHandle, "Entrance");
-        if(!library_entrancy_function) {
-          fprintf(stderr, "Error: %s\n", dlerror());
-          dlclose(libHandle);
-          return EXIT_FAILURE;
-        }
-
-        struct Library* L = library_entrancy_function();
-        if(L->h->h->c == K) {
-          printf("Entrancy Library Key: %s\n", (char*)L->h->h->i);
-          if(Head == NULL && strcmp((char*)L->h->h->i, "MAIN") == 0) {
-            Head = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
-            Head->h = libHandle;
-            Head->f = cwf->d_name;
-            Head->L = L;
-            Head->n = NULL;
-            Tail = Head;
-            register_WMReader_function regreader = (register_WMReader_function) dlsym(libHandle, "RegisterWMReader");
-            regreader(Read);
-            register_WMWriter_function regwriter = (register_WMWriter_function) dlsym(libHandle, "RegisterWMWriter");
-            regwriter(Write);
-            CallWrite("MAIN", Head->L->h);
-            CallRead("MAIN", Head->L->h);
-            EntranceCount++;
-          } else if(Head != NULL) {
-            struct EntrancyHandle* E = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
-            E->h = libHandle;
-            E->f = cwf->d_name;
-            E->L = L;
-            E->n = NULL;
-            Tail->n = E;
-            Tail = E;
-            register_WMReader_function regreader = (register_WMReader_function) dlsym(libHandle, "RegisterWMReader");
-            regreader(Read);
-            register_WMWriter_function regwriter = (register_WMWriter_function) dlsym(libHandle, "RegisterWMWriter");
-            regwriter(Write);
-            CallWrite("MAIN", Tail->L->h);
-            CallRead("MAIN", Tail->L->h);
-            EntranceCount++;
-          }
-        } else {
-          fprintf(stderr, "Error: Unsupported Library Type\n");
-          return EXIT_FAILURE;
-        }
-        /*dlclose(libHandle);*/
-      } else {
-/*        printf("Irregular Library: %s\n", cwf->d_name); */
-      }
-    }
-
+    /* Pass Three */
+    /* Do Whatever */
     usleep(1000000);
     argc++;
     if(argc == 4) {
@@ -190,10 +91,9 @@ int main(int argc, char** argv) {
     if(argc >= 5) {
       CallSignal("POPEN", 0);
     }
-  }
+  } while((E = scanLib(NULL, WMLIBFOLDER)) != NULL);
 
   printf("Finished\n");
-  closedir(cwd);
   return 0;
 }
 
