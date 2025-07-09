@@ -1,5 +1,6 @@
 #include "library.h"
 #include "main.h"
+#include "plugin.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -42,6 +43,21 @@ struct Library* Write(struct Book* B) {
             HEAD = TAIL;
         }
         */
+    } else if(B->i == IO) {
+        struct Library* L = (struct Library*)malloc(sizeof(struct Library));
+        L->i = IO;
+        L->h = B;
+        struct EntrancyHandle* E = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
+        E->f = strdup(L->h->h->c == WRITER ? "Writer" : "Reader");
+        E->L = L;
+        if(Head == NULL)
+          Head = Tail = E;
+        else {
+            Tail->n = E;
+            Tail = E;
+        }
+
+        return L;
     } else if(B->i == POPEN) {
         struct Process* p = (struct Process*)malloc(sizeof(struct Process));
         FILE* pout = popen(B->h->i, "r");
@@ -79,10 +95,16 @@ struct Book* Read(struct Book* B) {
 
         if(fgets(buffer, sizeof(buffer) - 1, p->pout) != NULL) {
             buffer[sizeof(buffer) - 1] = '\0';
-            bcw("POPEN", TEXT, K, NULL);
             struct Book* T = Bind(TEXT, K, buffer);
             //fprintf(stderr, "Read\n%s\n", buffer);
-            WriteWM(T);
+            if(Head != NULL) {
+                struct EntrancyHandle* E = Enter(Head, "Writer");
+                write_callback writer = (write_callback)(E->L->h->h->i);
+                writer(T);
+            } else {
+                fprintf(stderr, "Head Null\n");
+            }
+            //WriteWM(T);
             free(T->h);
             free(T);
         }

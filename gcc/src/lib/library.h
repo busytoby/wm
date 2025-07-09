@@ -61,10 +61,10 @@ struct Library* L() {
     return E;
 }
 
-struct Library* Key(char* keydata) {
+struct Library* Key(void* key) {
     struct Library* E = L();
     E->h->h->c = K;
-    E->h->h->i = keydata;
+    E->h->h->i = key;
     return E;
 }
 

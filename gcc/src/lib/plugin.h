@@ -21,8 +21,9 @@ struct EntrancyHandle {
 struct Library* (*library_entrancy_function)();
 typedef struct Book* (*read_callback)(struct Book*);
 typedef struct Library* (*write_callback)(struct Book*);
-typedef int* (*register_WMReader_function)(struct Book* (*read_callback)(struct Book*));
-typedef int* (*register_WMWriter_function)(struct Library* (*write_callback)(struct Book*));
+
+typedef struct Book* (*register_WMReader_function)(struct Book* (*read_callback)(struct Book*));
+typedef struct Library* (*register_WMWriter_function)(struct Library* (*write_callback)(struct Book*));
 
 struct EntrancyHandle* Head;
 struct EntrancyHandle* Tail;
@@ -76,16 +77,20 @@ struct Book* CallRead(char* Key, struct Book* B) {
 struct Library* bcw(char* Key, enum Category M, enum Category C, void* ptr) {
     struct Book* P = Bind(M, C, ptr);
     struct Library* A = CallWrite(Key, P);
-    free(P->h);
-    free(P);
+    if(A == NULL) {
+        free(P->h);
+        free(P);
+    }
     return A;
 }
 
 struct Book* bcr(char* Key, enum Category M, enum Category C, void* ptr) {
     struct Book* P = Bind(M, C, ptr);
     struct Book* B = CallRead(Key, P);
-    free(P->h);
-    free(P);
+    if(B == NULL) {
+        free(P->h);
+        free(P);
+    }
     return B;
 }
 
@@ -216,10 +221,9 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
             Tail = E;
           }
         }
-        register_WMReader_function regreader = (register_WMReader_function) dlsym(libHandle, "RegisterWMReader");
-        regreader(Read);
-        register_WMWriter_function regwriter = (register_WMWriter_function) dlsym(libHandle, "RegisterWMWriter");
-        regwriter(Write);
+
+        bcw(E->f, IO, WRITER, Write);
+        bcw(E->f, IO, READER, Read);
 
         fprintf(stderr, "Stored %s (%s)\n", E->f, E->p);
       } else {

@@ -4,9 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct Library* (*write_callback)(struct Book*);
-typedef struct Book* (*read_callback)(struct Book*);
-
 int main(int argc, char** argv) {
   char* WMLIBFOLDER = getLibFolder();
   printf("Folder: %s\n", WMLIBFOLDER);
@@ -22,6 +19,9 @@ int main(int argc, char** argv) {
     fprintf(stderr, "No Libraries Found\n");
     return EXIT_FAILURE;
   }
+
+  bcw("MAIN", IO, WRITER, Write);
+  bcw("MAIN", IO, READER, Read);
 
   do {
     /* Pass Two */
@@ -63,7 +63,8 @@ int main(int argc, char** argv) {
 
 struct Library* Write(struct Book* B) {
     printf("wWM [\n");
-    CallWrite("MAIN", B);
+    if(B->i != IO)
+      CallWrite("MAIN", B);
     printf("]\n");
     return NULL;
 }
