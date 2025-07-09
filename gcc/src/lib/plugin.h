@@ -22,9 +22,6 @@ struct Library* (*library_entrancy_function)();
 typedef struct Book* (*read_callback)(struct Book*);
 typedef struct Library* (*write_callback)(struct Book*);
 
-typedef struct Book* (*register_WMReader_function)(struct Book* (*read_callback)(struct Book*));
-typedef struct Library* (*register_WMWriter_function)(struct Library* (*write_callback)(struct Book*));
-
 struct EntrancyHandle* Head;
 struct EntrancyHandle* Tail;
 

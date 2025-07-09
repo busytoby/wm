@@ -20,9 +20,6 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  bcw("MAIN", IO, WRITER, Write);
-  bcw("MAIN", IO, READER, Read);
-
   do {
     /* Pass Two */
     /*
