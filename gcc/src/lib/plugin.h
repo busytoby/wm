@@ -1,4 +1,5 @@
 #pragma once
+#include "main.h"
 #include <dirent.h>
 #include <dlfcn.h>
 #include <stdio.h>
@@ -9,12 +10,12 @@
 #include <sys/types.h>
 #include <string.h>
 
-struct EntrancyHandle {
+struct Cell {
   void *h;
   char *f;
   char *p;
   struct Library* L;
-  struct EntrancyHandle* n;
+  struct Cell* n;
   time_t m;
 };
 
@@ -22,10 +23,10 @@ struct Library* (*library_entrancy_function)();
 typedef struct Book* (*read_callback)(struct Book*);
 typedef struct Library* (*write_callback)(struct Book*);
 
-struct EntrancyHandle* Head;
-struct EntrancyHandle* Tail;
+struct Cell* Head;
+struct Cell* Tail;
 
-struct EntrancyHandle* Enter(struct EntrancyHandle* E, char* f) {
+struct Cell* Enter(struct Cell* E, char* f) {
   if(E == NULL) return NULL;
   if(strcmp(E->f, f) == 0) return E;
   if(strcmp(E->p, f) == 0) return E;
@@ -36,7 +37,7 @@ struct EntrancyHandle* Enter(struct EntrancyHandle* E, char* f) {
 
 struct Library* CallWrite(char* Key, struct Book* B) {
     //fprintf(stderr, "CallWrite\n");
-    struct EntrancyHandle* E = Enter(Head, Key);
+    struct Cell* E = Enter(Head, Key);
     if(E == NULL) {
       fprintf(stderr, "No [%s] Plugin Found\n", Key);
       return NULL;
@@ -51,7 +52,7 @@ struct Library* CallWrite(char* Key, struct Book* B) {
 
 struct Book* CallRead(char* Key, struct Book* B) {
     //fprintf(stderr, "CallRead\n");
-    struct EntrancyHandle* E = Enter(Head, Key);
+    struct Cell* E = Enter(Head, Key);
     if(E == NULL) {
       fprintf(stderr, "No [%s] Plugin Found\n", Key);
       return NULL;
@@ -107,8 +108,8 @@ char* getLibFolder() {
   return strdup(LibFolder);
 }
 
-struct EntrancyHandle* unloadPlugin(char* name) {
-    struct EntrancyHandle* E = Enter(Head, name);
+struct Cell* unloadPlugin(char* name) {
+    struct Cell* E = Enter(Head, name);
     if(E == NULL) return Head;
     if(E->h == NULL) return E;
     bcw(E->f, BIN, BIN, NULL);
@@ -119,7 +120,7 @@ struct EntrancyHandle* unloadPlugin(char* name) {
     return E;
 }
 
-struct EntrancyHandle* scanLib(char* arg, char* folder) {
+struct Cell* scanLib(char* arg, char* folder) {
   DIR* cwd;
   struct dirent *cwf;
   cwd = opendir(folder);
@@ -137,7 +138,7 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
   while((cwf = readdir(cwd))) {
     struct stat cws;
     char fullPath[255] = "";
-    struct EntrancyHandle *E;
+    struct Cell *E;
 
     //int c = 0;
     //E=Head;
@@ -171,7 +172,7 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
 
       if(E == NULL || E->h == NULL) {
         printf("Scanning: %s\n", fullPath);
-        if(E == NULL) E = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
+        if(E == NULL) E = (struct Cell*)malloc(sizeof(struct Cell));
       }
 
       //fprintf(stderr, "ehnull: %b\n", (E->h == NULL));
@@ -192,8 +193,8 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
       struct Library* L = library_entrancy_function();
       if(L->h->h->c == K) {
         struct stat attr;
-        printf("Entrancy Library Key: %s\n", (char*)L->h->h->i);
-        if(E == NULL) E = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
+        printf("Cell Library Key: %s\n", (char*)L->h->h->i);
+        if(E == NULL) E = (struct Cell*)malloc(sizeof(struct Cell));
         E->h = libHandle;
         if(E->f != NULL) free(E->f);
         E->f = strdup(cwf->d_name);
@@ -232,7 +233,7 @@ struct EntrancyHandle* scanLib(char* arg, char* folder) {
   closedir(cwd);
 
   //int c = 0;
-  //struct EntrancyHandle* E=Head;
+  //struct Cell* E=Head;
   //while(E != NULL) { fprintf(stderr, "final elib %s (%s)\n", E->f, E->p); E = E->n; c++; }
   //fprintf(stderr, "Final LibCount: %d\n", c);
 

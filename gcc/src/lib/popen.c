@@ -47,7 +47,7 @@ struct Library* Write(struct Book* B) {
         struct Library* L = (struct Library*)malloc(sizeof(struct Library));
         L->i = IO;
         L->h = B;
-        struct EntrancyHandle* E = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
+        struct Cell* E = (struct Cell*)malloc(sizeof(struct Cell));
         E->f = strdup(L->h->h->c == WRITER ? "Writer" : "Reader");
         E->L = L;
         if(Head == NULL)
@@ -98,7 +98,12 @@ struct Book* Read(struct Book* B) {
             struct Book* T = Bind(TEXT, K, buffer);
             //fprintf(stderr, "Read\n%s\n", buffer);
             if(Head != NULL) {
-                struct EntrancyHandle* E = Enter(Head, "Writer");
+//                int count =1;
+//                Tail = Head;
+//                while(Tail->n != NULL) { count++; Tail = Tail->n; }
+//                fprintf(stderr, "%d %d %lld %d %s\n", count, Head->L->i, Head->L->h->i, Head->L->h->h->c, Head->f);
+//                fprintf(stderr, "%d %d %lld %d %s\n", count, Head->n->L->i, Head->n->L->h->i, Head->n->L->h->h->c, Head->n->f);
+                struct Cell* E = Enter(Head, "Writer");
                 write_callback writer = (write_callback)(E->L->h->h->i);
                 writer(T);
             } else {

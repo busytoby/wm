@@ -56,7 +56,7 @@ struct Library* Write(struct Book* B) {
             //fprintf(stderr, "IO Type Unknown\n");
             return NULL;
         }
-        struct EntrancyHandle* E = (struct EntrancyHandle*)malloc(sizeof(struct EntrancyHandle));
+        struct Cell* E = (struct Cell*)malloc(sizeof(struct Cell));
         E->f = strdup(L->h->h->c == WRITER ? "Writer" : "Reader");
         E->L = L;
         if(Head == NULL)

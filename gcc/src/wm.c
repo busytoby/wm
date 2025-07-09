@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
   }
 
   /* Pass One */
-  struct EntrancyHandle* E = scanLib(NULL, WMLIBFOLDER);
+  struct Cell* E = scanLib(NULL, WMLIBFOLDER);
   if(E == NULL) {
     fprintf(stderr, "No Libraries Found\n");
     return EXIT_FAILURE;
