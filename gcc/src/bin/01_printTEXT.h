@@ -11,10 +11,3 @@ struct Book* printText_Read(struct Book* B) {
     printf(B->h->i);
     return NULL;
 }
-
-struct Library* printText_Pass(struct Library*) {
-    fprintf(stderr, "Not Implemented Yet");
-    return NULL;
-}
-
-

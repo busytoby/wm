@@ -59,10 +59,3 @@ struct Book* Read(struct Book* B) {
     if(I->v == NULL) return I->k;
     return I->v;
 }
-
-struct Library* Pass(struct Library*) {
-    fprintf(stderr, "Not Implemented Yet");
-    return NULL;
-}
-
-

@@ -8,11 +8,13 @@
 #include <sys/mman.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <string.h>
 #include <error.h>
 
 struct Process {   
     FILE* pout;
     struct Process* n;
+    int pid;
 };
 
 struct Process* HEAD = NULL;
@@ -25,9 +27,24 @@ struct Library* Entrance() {
 struct Library* Write(struct Book* B) {
     if(B->i == -1) {
         fprintf(stderr, "Killing Process Not Yet Implemented");
+        /*
+        TAIL = HEAD;
+        char killcmd[255];
+        while(TAIL != NULL) {
+            printf("Killing Process %d\n", TAIL->pid);
+            //sprintf(killcmd, "kill -KILL %d", TAIL->pid);
+            //sprintf(killcmd, "kill -KILL %d", TAIL->pid+1);
+            //sprintf(killcmd, "kill -KILL %d", TAIL->pid+2);
+            popen(killcmd, "r");
+            TAIL = TAIL->n;
+            fclose(HEAD->pout);
+            free(HEAD);
+            HEAD = TAIL;
+        }
+        */
     } else if(B->i == POPEN) {
-        FILE* pout = popen(B->h->i, "r");
         struct Process* p = (struct Process*)malloc(sizeof(struct Process));
+        FILE* pout = popen(B->h->i, "r");
         p->pout = pout;
         p->n = NULL;
         if(HEAD == NULL) HEAD = TAIL = p;
@@ -38,6 +55,11 @@ struct Library* Write(struct Book* B) {
         } else {
             fprintf(stderr, "ERROR: Process Tail Was Not Clear");
         }
+        int pid = fork();
+        if(pid == 0) { 
+            p->pid = pid;
+            exit(0);
+        }
         printf("POPEN: %s\n", (char*)B->h->i);
     } else {
         fprintf(stderr, "Write Type %lld Not Yet Implemented\n", B->i);
@@ -46,49 +68,26 @@ struct Library* Write(struct Book* B) {
     return NULL;
 }
 
-int Signal(int n) {    
-    //printf("Received Signal %d\n", n);
-    if(n == -1) {
-        fprintf(stderr, "Killall not yet implemented\n");
-        /*
-        *running = false;
-        kill(forkpid, SIGKILL);
-        waitpid(forkpid, &status, 0);
-        if(WTERMSIG(status) == SIGKILL) {
-            forkpid = 0;
-        }
-        pclose(pout);
-        */
-    } else if(n == 0) {
-        char buffer[1024];
-        struct Process* p = HEAD;
-        while(p != NULL) {
-            int pfd = fileno(p->pout);
-            int flags = fcntl(pfd, F_GETFL, 0);
-            flags |= O_NONBLOCK;
-            fcntl(pfd, F_SETFL, flags);
-
-            if(fgets(buffer, sizeof(buffer) - 1, p->pout) != NULL) {
-                buffer[sizeof(buffer) - 1] = '\0';
-                struct Book* T = TextBook(buffer);
-                //fprintf(stderr, "Read\n%s\n", buffer);
-                WriteWM(T);
-                free(T->h);
-                free(T);
-            }
-            p = p->n;
-        }
-    } else {
-        /*printf("Received Signal %d\n", n);*/
-    }
-    return n;
-}
-
 struct Book* Read(struct Book* B) {
-    printf("Read POPEN Test [\n");
-    if(WriteWM != NULL)
-        WriteWM(B);
-    printf("]\n");
+    char buffer[1024];
+    struct Process* p = HEAD;
+    while(p != NULL) {
+        int pfd = fileno(p->pout);
+        int flags = fcntl(pfd, F_GETFL, 0);
+        flags |= O_NONBLOCK;
+        fcntl(pfd, F_SETFL, flags);
+
+        if(fgets(buffer, sizeof(buffer) - 1, p->pout) != NULL) {
+            buffer[sizeof(buffer) - 1] = '\0';
+            bcw("POPEN", TEXT, K, NULL);
+            struct Book* T = Bind(TEXT, K, buffer);
+            //fprintf(stderr, "Read\n%s\n", buffer);
+            WriteWM(T);
+            free(T->h);
+            free(T);
+        }
+        p = p->n;
+    }
     return NULL;
 }
 

@@ -19,6 +19,8 @@ struct EntrancyHandle {
 };
 
 struct Library* (*library_entrancy_function)();
+typedef struct Book* (*read_callback)(struct Book*);
+typedef struct Library* (*write_callback)(struct Book*);
 typedef int* (*register_WMReader_function)(struct Book* (*read_callback)(struct Book*));
 typedef int* (*register_WMWriter_function)(struct Library* (*write_callback)(struct Book*));
 
@@ -32,6 +34,59 @@ struct EntrancyHandle* Enter(struct EntrancyHandle* E, char* f) {
   if(strcmp(E->L->h->h->i, f) == 0) return E;  
   if(!E->n) return NULL;
   return Enter(E->n, f);
+}
+
+struct Library* CallWrite(char* Key, struct Book* B) {
+    //fprintf(stderr, "CallWrite\n");
+    struct EntrancyHandle* E = Enter(Head, Key);
+    if(E == NULL) {
+      fprintf(stderr, "No [%s] Plugin Found\n", Key);
+      return NULL;
+    }
+    if(E->h == NULL) {
+      fprintf(stderr, "Cannot Write To Closed DLL\n");
+      return NULL;
+    }
+    write_callback writer = (write_callback)(E->L->h->n->h->i);
+    return writer(B);
+}
+
+struct Book* CallRead(char* Key, struct Book* B) {
+    //fprintf(stderr, "CallRead\n");
+    struct EntrancyHandle* E = Enter(Head, Key);
+    if(E == NULL) {
+      fprintf(stderr, "No [%s] Plugin Found\n", Key);
+      return NULL;
+    }
+    if(E->h == NULL) {
+      fprintf(stderr, "Cannot Read From Closed DLL\n");
+      return NULL;
+    }
+    read_callback reader = (read_callback)(E->L->h->n->n->h->i);
+    struct Book* A = reader(B);
+    if(A == NULL) return A;
+    if(A->i == K) {
+      printf("Read K: %s\n", (char *)A->h->i);
+    } else {
+      fprintf(stderr, "No Read Handler Implemented For Type %lld", A->i);
+    }
+    return A;
+}
+
+struct Library* bcw(char* Key, enum Category M, enum Category C, void* ptr) {
+    struct Book* P = Bind(M, C, ptr);
+    struct Library* A = CallWrite(Key, P);
+    free(P->h);
+    free(P);
+    return A;
+}
+
+struct Book* bcr(char* Key, enum Category M, enum Category C, void* ptr) {
+    struct Book* P = Bind(M, C, ptr);
+    struct Book* B = CallRead(Key, P);
+    free(P->h);
+    free(P);
+    return B;
 }
 
 char* getLibFolder() {
@@ -54,6 +109,7 @@ struct EntrancyHandle* unloadPlugin(char* name) {
     struct EntrancyHandle* E = Enter(Head, name);
     if(E == NULL) return Head;
     if(E->h == NULL) return E;
+    bcw(E->f, BIN, BIN, NULL);
     fprintf(stderr, "Unload Plugin %s", name);
     dlclose(E->h);
     E->h = NULL;

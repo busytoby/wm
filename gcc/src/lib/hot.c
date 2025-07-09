@@ -50,9 +50,8 @@ struct CompileTarget* addCompileTarget(char* identifier, char* source, char* tar
     return HEAD;
 }
 
-int Signal(int n) {    
-    //printf("Received Signal %d\n", n);    
-    if(n == 1) {
+struct Library* Write(struct Book* B) {
+    if(B->i == BIN) {
         struct CompileTarget* T = HEAD;
         struct stat attr;
         char gcc[255];
@@ -69,15 +68,10 @@ int Signal(int n) {
             T = T->n;
         }
     } else {
-        /*printf("Received Signal %d\n", n);*/
-    }
-    return n;
-}
-
-struct Library* Write(struct Book* B) {
     printf("B->i TYPE %lld Not Yet Implemented [\n", B->i);
     printf(B->h->i);
     printf("\n] Write HOT Test\n");
+    }
     return NULL;
 }
 
@@ -91,10 +85,3 @@ struct Library* Entrance() {
 struct Book* Read(struct Book* B) {
     return B;
 }
-
-struct Library* Pass(struct Library*) {
-    fprintf(stderr, "Not Implemented Yet");
-    return NULL;
-}
-
-

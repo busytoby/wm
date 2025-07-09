@@ -8,7 +8,8 @@ enum Category {
     WRITER,
     READER,
     TEXT,
-    POPEN
+    BIN,
+    POPEN,
 };
 
 struct Page {
@@ -29,8 +30,25 @@ struct Library {
 };
 
 struct Book* Read(struct Book*);
-struct Library* Pass(struct Library*);
 struct Library* Write(struct Book*);
+
+struct Book* Bind(enum Category M, enum Category C, void* ptr) {
+    struct Book* B = (struct Book*)malloc(sizeof(struct Book));
+    struct Page* P = (struct Page*)malloc(sizeof(struct Page));
+    B->i = M;
+    B->h = P;
+    P->c = C;
+    P->i = ptr;
+    return B;
+}
+
+struct Book* IOWriter(struct Library* (*callback_writer_function)(struct Book*)) {
+    return Bind(WRITER, IO, callback_writer_function);
+}
+
+struct Book* IOReader(struct Book* (*callback_reader_function)(struct Book*)) {
+    return Bind(READER, IO, callback_reader_function);
+}
 
 struct Library* L() {
     struct Library* E = (struct Library*)malloc(sizeof(struct Library));
@@ -41,26 +59,6 @@ struct Library* L() {
     M->h = C;
     E->h = M;
     return E;
-}
-
-struct Book* IOWriter(struct Library* (*callback_writer_function)(struct Book*)) {
-    struct Book* M = (struct Book*)malloc(sizeof(struct Book));
-    struct Page* C = (struct Page*)malloc(sizeof(struct Page));
-    M->i = 0;
-    M->h = C;
-    C->c = IO;
-    C->i = callback_writer_function;
-    return M;
-}
-
-struct Book* IOReader(struct Book* (*callback_reader_function)(struct Book*)) {
-    struct Book* M = (struct Book*)malloc(sizeof(struct Book));
-    struct Page* C = (struct Page*)malloc(sizeof(struct Page));
-    M->i = 0;
-    M->h = C;
-    C->c = IO;
-    C->i = callback_reader_function;
-    return M;
 }
 
 struct Library* Key(char* keydata) {
@@ -79,24 +77,4 @@ struct Library* Plugin(char *name) {
     L->h->n->n->i = READER;
     L->h->n->n->p = L->h->n;
     return L;
-}
-
-struct Book* TextBook(char *buffer) {
-    struct Book* M = (struct Book*)malloc(sizeof(struct Book));
-    struct Page* C = (struct Page*)malloc(sizeof(struct Page));
-    M->i = TEXT;
-    M->h = C;
-    C->c = K;
-    C->i = buffer;
-    return M;
-}
-
-struct Book* Launch(char* cmd) {
-    struct Book* M = (struct Book*)malloc(sizeof(struct Book));
-    struct Page* C = (struct Page*)malloc(sizeof(struct Page));
-    M->i = POPEN;
-    M->h = C;
-    C->c = K;
-    C->i = cmd;
-    return M;
 }

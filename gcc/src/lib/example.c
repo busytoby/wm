@@ -18,10 +18,3 @@ struct Library* Entrance() {
 struct Book* Read(struct Book* B) {
     return B;
 }
-
-struct Library* Pass(struct Library*) {
-    fprintf(stderr, "Not Implemented Yet");
-    return NULL;
-}
-
-
