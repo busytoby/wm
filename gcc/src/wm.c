@@ -60,8 +60,7 @@ int main(int argc, char** argv) {
 
 struct Library* Write(struct Book* B) {
     printf("wWM [\n");
-    if(B->i != IO)
-      CallWrite("MAIN", B);
+    CallWrite("MAIN", B);
     printf("]\n");
     return NULL;
 }
