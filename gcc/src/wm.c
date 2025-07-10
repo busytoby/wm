@@ -49,9 +49,6 @@ int main(int argc, char** argv) {
     }
 
     fprintf(stderr, "%d\n", argc);
-    if(argc == 15) {
-      bcw("POPEN", POPEN, K, "python3.13 /home/mariarahel/src/wm/python/https.py 2>&1");
-    }
   } while((E = scanLib(NULL, WMLIBFOLDER)) != NULL);
 
   printf("Finished\n");

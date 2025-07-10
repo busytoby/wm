@@ -67,6 +67,8 @@ struct Library* Write(struct Book* B) {
             }
             T = T->n;
         }
+    } else if(B->i == IO) {
+        //fprintf(stderr, "WM IO Handler For %s Ignored\n", (B->h->c == READER) ? "Reader" : (B->h->c == WRITER ? "Writer" : "???"));
     } else {
     printf("B->i TYPE %lld Not Yet Implemented [\n", B->i);
     printf(B->h->i);
